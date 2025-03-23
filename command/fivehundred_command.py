@@ -108,7 +108,7 @@ class FiveHundred(commands.Cog):
                 return
 
             # get players
-            players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id)
+            players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id, cursor)
             players = {}
             for player in players_tuple:
                 p = PlayerDto(*player)
@@ -122,7 +122,7 @@ class FiveHundred(commands.Cog):
 
             await ctx.send(f'{ ctx.author.nick } captured the ball at { current_game.ball_value } points!')
 
-            current_game.ball_status = 'INACTIVE'
+            current_game.ball_status = BallStatus.INACTIVE
             current_game.current_thrower = None
             current_game.ball_value = 0
             current_game.time_active = None
@@ -131,7 +131,7 @@ class FiveHundred(commands.Cog):
             ServerRepository.updateServer(current_game, cursor)
 
             if players[current_player_id].points >= 500:
-                PlayerRepository.resetAllPlayerPointsFromServer(guild_id,cursor)
+                PlayerRepository.resetAllPlayerPointsFromServer(guild_id, cursor)
                 await ctx.send(f'🎉 {ctx.author.nick} has won 500! 🎉')
 
     @commands.hybrid_command(name="leaderboard", with_app_command=True)

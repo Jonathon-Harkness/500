@@ -32,7 +32,6 @@ class ServerRepository:
                                              server.throw_type,
                                              server.time_active,
                                              server.current_thrower))
-        return
 
     @staticmethod
     def updateServer(server: ServerDto, cursor):
@@ -44,4 +43,4 @@ class ServerRepository:
                                              server.time_active,
                                              server.current_thrower,
                                              server.guild_id))
-        return
+
