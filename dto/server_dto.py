@@ -1,4 +1,4 @@
-class Server:
+class ServerDto:
 
     def __init__(self, guild_id, ball_status, ball_value, throw_type, time_active, current_thrower):
         self.guild_id = guild_id
