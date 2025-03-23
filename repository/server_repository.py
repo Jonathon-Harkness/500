@@ -19,8 +19,8 @@ class ServerRepository:
         return ServerDto(*maybeGame) if maybeGame else None
 
     @staticmethod
-    def insertServer(server: ServerDto):
-        c.execute("INSERT INTO SERVER (GUILD_ID, CHANNEL_ID, BALL_STATUS, BALL_VALUE, THROW_TYPE, TIME_ACTIVE, CURRENT_THROWER)"
+    def insertServer(server: ServerDto, cursor):
+        cursor.execute("INSERT INTO SERVER (GUILD_ID, CHANNEL_ID, BALL_STATUS, BALL_VALUE, THROW_TYPE, TIME_ACTIVE, CURRENT_THROWER)"
                   "VALUES (?, ?, ?, ?, ?, ?, ?)", (server.guild_id,
                                                 server.channel_id,
                                                 server.ball_status,
@@ -28,12 +28,11 @@ class ServerRepository:
                                                 server.throw_type,
                                                 server.time_active,
                                                 server.current_thrower))
-        conn.commit()
         return
 
     @staticmethod
-    def updateServer(server: ServerDto):
-        c.execute(f"UPDATE SERVER "
+    def updateServer(server: ServerDto, cursor):
+        cursor.execute(f"UPDATE SERVER "
                   f"SET BALL_STATUS=?, BALL_VALUE=?, THROW_TYPE=?, TIME_ACTIVE=?, CURRENT_THROWER=? "
                   f"WHERE GUILD_ID=?", (server.ball_status,
                                         server.ball_value,
@@ -41,5 +40,4 @@ class ServerRepository:
                                         server.time_active,
                                         server.current_thrower,
                                         server.guild_id))
-        conn.commit()
         return

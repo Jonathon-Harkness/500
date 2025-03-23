@@ -1,14 +1,8 @@
-import discord
 from datetime import datetime, timedelta
 from discord.ext import commands, tasks
 import sqlite3
-from game import Game
-from player import Player
 from repository import ServerRepository, PlayerRepository
 from dto import PlayerDto, ServerDto
-
-conn = sqlite3.connect('500.db')
-c = conn.cursor()
 
 
 class FiveHundred(commands.Cog):
@@ -28,8 +22,6 @@ class FiveHundred(commands.Cog):
         expiredActiveServers = ServerRepository.getAllServersWithExpiredActiveTime()
         for server in expiredActiveServers:
             serverDto = ServerDto(*server)
-            print(serverDto.time_active)
-            print(datetime.now())
             if serverDto.throw_type == 'ALIVE':
                 serverDto.ball_status = 'INACTIVE'
                 serverDto.ball_value = 0
@@ -44,107 +36,111 @@ class FiveHundred(commands.Cog):
     async def throw(self, ctx: commands.Context, points, throw_type):
         """throws the ball (usage: /throw <0-500> <ALIVE, DEAD>)"""
 
-        throw_type = throw_type.upper()
-        if throw_type not in self.throw_types:
-            await ctx.send(f'{throw_type} is not a valid Throw Type')
-            return
+        with sqlite3.connect('500.db') as conn:
+            cursor = conn.cursor()
+            throw_type = throw_type.upper()
+            if throw_type not in self.throw_types:
+                await ctx.send(f'{throw_type} is not a valid Throw Type')
+                return
 
-        # keep the ball alive for 300 seconds or 20 seconds if dead
-        print(throw_type)
-        time_active = 300 if throw_type == 'ALIVE' else 20
+            # keep the ball alive for 300 seconds or 20 seconds if dead
+            print(throw_type)
+            time_active = 300 if throw_type == 'ALIVE' else 20
 
-        # get server
-        guild_id = ctx.author.guild.id
-        channel_id = ctx.channel.id
-        player_id = ctx.author.id
-        ball_status = 'INACTIVE'
-        current_game = ServerRepository.getServerInfo(guild_id)
-        if not current_game:
-            ServerRepository.insertServer(
-                ServerDto(guild_id, channel_id, ball_status, points, throw_type, datetime.now(), player_id))
-            current_game = ServerDto(guild_id, channel_id, ball_status, points, throw_type, datetime.now(), player_id)
+            # get server
+            guild_id = ctx.author.guild.id
+            channel_id = ctx.channel.id
+            player_id = ctx.author.id
+            ball_status = 'INACTIVE'
+            current_game = ServerRepository.getServerInfo(guild_id)
 
-        # print(current_game.guild_id)
-        # print(current_game.ball_status)
-        # print(current_game.ball_value)
-        # print(current_game.current_thrower)
+            if not current_game:
+                ServerRepository.insertServer(
+                    ServerDto(guild_id, channel_id, ball_status, points, throw_type, datetime.now(), player_id), cursor)
+                current_game = ServerDto(guild_id, channel_id, ball_status, points, throw_type, datetime.now(), player_id)
 
-        if current_game.ball_status == 'ACTIVE':
-            await ctx.send(f'Ball is currently active!')
-            return
+            # print(current_game.guild_id)
+            # print(current_game.ball_status)
+            # print(current_game.ball_value)
+            # print(current_game.current_thrower)
 
-        if current_game.current_thrower != ctx.author.id and current_game.current_thrower is not None:
-            await ctx.send(f'Your not the active thrower!')
-            return
+            if current_game.ball_status == 'ACTIVE':
+                await ctx.send(f'Ball is currently active!')
+                return
 
-        if not points or not points.isnumeric() or int(points) < 0 or int(points) > 500:
-            await ctx.send(f'{points} is not a number under 500!')
-            return
+            if current_game.current_thrower != ctx.author.id and current_game.current_thrower is not None:
+                await ctx.send(f'Your not the active thrower!')
+                return
 
-        current_game.guild_id = guild_id
-        current_game.ball_value = int(points)
-        current_game.ball_status = 'ACTIVE'
-        current_game.current_thrower = player_id
-        current_game.throw_type = throw_type
-        current_game.time_active = datetime.utcnow() + timedelta(seconds=time_active)
+            if not points or not points.isnumeric() or int(points) < 0 or int(points) > 500:
+                await ctx.send(f'{points} is not a number under 500!')
+                return
 
-        # update game
-        ServerRepository.updateServer(current_game)
+            current_game.guild_id = guild_id
+            current_game.ball_value = int(points)
+            current_game.ball_status = 'ACTIVE'
+            current_game.current_thrower = player_id
+            current_game.throw_type = throw_type
+            current_game.time_active = datetime.utcnow() + timedelta(seconds=time_active)
 
-        throw_type_message = f"You have {time_active / 60.0} minutes to catch it!" if throw_type == 'ALIVE' else ''
-        await ctx.send(f'{ctx.author.nick} threw the ball for {points} points {throw_type}! {throw_type_message}')
+            # update game
+            ServerRepository.updateServer(current_game, cursor)
+
+            throw_type_message = f"You have {time_active / 60.0} minutes to catch it!" if throw_type == 'ALIVE' else ''
+            await ctx.send(f'{ctx.author.nick} threw the ball for {points} points {throw_type}! {throw_type_message}')
 
     @commands.hybrid_command(name="catch", with_app_command=True)
     async def catch(self, ctx):
         """catch the ball"""
 
-        # get server
-        guild_id = ctx.author.guild.id
-        current_player_id = ctx.author.id
-        channel_id = ctx.channel.id
+        with sqlite3.connect('500.db') as conn:
+            cursor = conn.cursor()
+            # get server
+            guild_id = ctx.author.guild.id
+            current_player_id = ctx.author.id
+            channel_id = ctx.channel.id
 
-        # get current game
-        server = ServerRepository.getServerInfo(guild_id)
-        if not server:
-            await ctx.send(f"No active ball to throw!")
-            return
+            # get current game
+            server = ServerRepository.getServerInfo(guild_id)
+            if not server:
+                await ctx.send(f"No active ball to throw!")
+                return
 
-        current_game = server
+            current_game = server
 
-        if current_game.ball_status == 'INACTIVE':
-            await ctx.send(f'No active ball to throw!')
-            return
+            if current_game.ball_status == 'INACTIVE':
+                await ctx.send(f'No active ball to throw!')
+                return
 
-        if current_game.current_thrower == ctx.author.id and ctx.author.nick != 'Jon':
-            await ctx.send(f'You\'re the active thrower!')
-            return
+            if current_game.current_thrower == ctx.author.id and ctx.author.nick != 'Jon':
+                await ctx.send(f'You\'re the active thrower!')
+                return
 
-        # get players
-        players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id)
-        players = {}
-        for player in players_tuple:
-            p = PlayerDto(*player)
-            players[p.player_id] = p
+            # get players
+            players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id)
+            players = {}
+            for player in players_tuple:
+                p = PlayerDto(*player)
+                players[p.player_id] = p
 
-        if current_player_id not in players:
-            players[current_player_id] = PlayerDto(guild_id, channel_id, current_player_id, current_game.ball_value, None, ctx.author.name, ctx.author.nick)
-            PlayerRepository.insertPlayer(guild_id, channel_id, current_player_id, ctx.author.name, ctx.author.nick)
-        else:
-            players[current_player_id].points += current_game.ball_value
+            if current_player_id not in players:
+                players[current_player_id] = PlayerDto(guild_id, channel_id, current_player_id, current_game.ball_value, None, ctx.author.name, ctx.author.nick)
+                PlayerRepository.insertPlayer(guild_id, channel_id, current_player_id, ctx.author.name, ctx.author.nick, cursor)
+            else:
+                players[current_player_id].points += current_game.ball_value
 
-        await ctx.send(f'{ ctx.author.nick } captured the ball at { current_game.ball_value } points!')
+            await ctx.send(f'{ ctx.author.nick } captured the ball at { current_game.ball_value } points!')
 
-        current_game.ball_status = 'INACTIVE'
-        current_game.current_thrower = None
-        current_game.ball_value = 0
+            current_game.ball_status = 'INACTIVE'
+            current_game.current_thrower = None
+            current_game.ball_value = 0
 
-        PlayerRepository.updatePlayer(players[current_player_id])
-        ServerRepository.updateServer(current_game)
+            PlayerRepository.updatePlayer(players[current_player_id], cursor)
+            ServerRepository.updateServer(current_game, cursor)
 
-        if players[current_player_id].points >= 500:
-            PlayerRepository.resetAllPlayerPointsFromServer(guild_id)
-            await ctx.send(f'🎉 {ctx.author.nick} has won 500! 🎉')
-        conn.commit()
+            if players[current_player_id].points >= 500:
+                PlayerRepository.resetAllPlayerPointsFromServer(guild_id,cursor)
+                await ctx.send(f'🎉 {ctx.author.nick} has won 500! 🎉')
 
     @commands.hybrid_command(name="leaderboard", with_app_command=True)
     async def leaderboard(self, ctx):
