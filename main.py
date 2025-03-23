@@ -3,8 +3,8 @@
 import discord
 from discord.ext import commands
 import sqlite3
-import CommandController
 import constants
+from command import FiveHundred
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -36,7 +36,7 @@ conn.commit()
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
-    await bot.add_cog(CommandController.FiveHundred(bot))
+    await bot.add_cog(FiveHundred(bot))
 
 
 @bot.command(name="sync")
