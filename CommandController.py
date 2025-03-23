@@ -4,7 +4,7 @@ from discord.ext import commands
 import sqlite3
 from game import Game
 from player import Player
-from repository import Repository
+from repository import ServerRepository
 
 conn = sqlite3.connect('500.db')
 c = conn.cursor()
@@ -35,7 +35,7 @@ class FiveHundred(commands.Cog):
         guild_id = ctx.author.guild.id
         player_id = ctx.author.id
         ball_status = 'INACTIVE'
-        current_game = Repository.getServerInfo(guild_id, ball_status, 0, throw_type, time_active, player_id)
+        current_game = ServerRepository.getServerInfo(guild_id, ball_status, 0, throw_type, time_active, player_id)
 
         # print(current_game.guild_id)
         # print(current_game.ball_status)
@@ -62,7 +62,7 @@ class FiveHundred(commands.Cog):
         current_game.time_active = datetime.now() + timedelta(seconds=time_active)
 
         # update game
-        Repository.updateGame(current_game)
+        ServerRepository.updateGame(current_game)
 
         throw_type_message = f"You have {time_active / 60} minutes to catch it!" if throw_type == 'ALIVE' else f"You must wait {time_active / 60} minutes before catching it"
         await ctx.send(f'{ctx.author.nick} threw the ball for {points} points {throw_type}! {throw_type_message}')
