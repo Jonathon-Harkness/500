@@ -8,12 +8,13 @@ c = conn.cursor()
 
 class Repository:
 
-    def getServerInfo(self, guild_id, ball_status, ball_value, throw_type, time_active, player_id):
+    @staticmethod
+    def getServerInfo(guild_id, ball_status, ball_value, throw_type, time_active, player_id):
         game = c.execute(f"SELECT * FROM SERVER WHERE GUILD_ID={guild_id}")
         maybeGame = game.fetchone()
         if not maybeGame:
-            current_game = Game(guild_id, ball_status, 0, throw_type, time_active, player_id)
-            self.insertNewGame(current_game)
+            current_game = Game(guild_id, ball_status, ball_value, throw_type, time_active, player_id)
+            Repository.insertNewGame(current_game)
         else:
             current_game = Game(*maybeGame)
         return current_game
@@ -40,7 +41,7 @@ class Repository:
                   f"BALL_VALUE='{game.ball_value}', "
                   f"THROW_TYPE='{game.throw_type}', "
                   f"TIME_ACTIVE='{game.time_active}', "
-                  f"CURRENT_THROWER='{game.player_id}' "
+                  f"CURRENT_THROWER='{game.current_thrower}' "
                   f"WHERE GUILD_ID='{game.guild_id}'")
         conn.commit()
         return

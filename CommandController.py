@@ -115,7 +115,7 @@ class FiveHundred(commands.Cog):
                       "VALUES (?, ?, ?, ?, ?, ?)", (guild_id, current_player_id, current_player_points, None, ctx.author.name, ctx.author.nick))
         else:
             c.execute(f"UPDATE PLAYER "
-                      f"SET POINTS='{current_player_points}', NICKNAME='{ctx.author.nick}', STATUS_EFFECT=NULL '"
+                      f"SET POINTS='{current_player_points}', NICKNAME='{ctx.author.nick}', STATUS_EFFECT=NULL "
                       f"WHERE GUILD_ID='{guild_id}' AND PLAYER_ID='{current_player_id}'")
 
         c.execute(f"UPDATE SERVER "
