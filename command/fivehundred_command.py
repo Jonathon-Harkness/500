@@ -49,7 +49,6 @@ class FiveHundred(commands.Cog):
                 await channel.send("Ball can now be retrieved!")
                 ServerRepository.updateServer(serverDto, cursor)
 
-
     @commands.hybrid_command(name="throw", with_app_command=True)
     async def throw(self, ctx: commands.Context, points, throw_type):
         """throws the ball (usage: /throw <-2000 - 500> <ALIVE, DEAD>)"""

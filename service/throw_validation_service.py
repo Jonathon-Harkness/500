@@ -1,4 +1,5 @@
 from constants import BallStatus, THROW_MIN, THROW_MAX
+from util import is_integer
 
 
 class ThrowValidationService:
@@ -15,5 +16,5 @@ class ThrowValidationService:
 
     @staticmethod
     def checkValidPointInput(points):
-        if not points or not points.isnumeric() or int(points) < THROW_MIN or int(points) > THROW_MAX:
-            raise Exception(f"{points} must be between -2000 and 500")
+        if not points or not is_integer(points) or int(points) < THROW_MIN or int(points) > THROW_MAX:
+            raise Exception(f"{points} must be an integer between -500 and 500")
