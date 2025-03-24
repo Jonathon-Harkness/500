@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from dateutil import parser
 from discord.ext import commands, tasks
 import sqlite3
 from repository import ServerRepository, PlayerRepository
@@ -14,26 +15,40 @@ class FiveHundred(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.updateServersWithExpiredActiveTime.start()
+        self.updateServersWithExpiredActiveTimeAlive.start()
 
     def cog_unload(self):
-        self.updateServersWithExpiredActiveTime.cancel()
+        self.updateServersWithExpiredActiveTimeAlive.cancel()
 
     @tasks.loop(seconds=5.0)
-    async def updateServersWithExpiredActiveTime(self):
+    async def updateServersWithExpiredActiveTimeAlive(self):
         with sqlite3.connect(path + "/500.db") as conn:
+
             cursor = conn.cursor()
-            expiredActiveServers = ServerRepository.getAllServersWithExpiredActiveTime(cursor)
-            for server in expiredActiveServers:
+
+            # For Alive
+            expiredActiveServersAlive = ServerRepository.getAllServersWithExpiredActiveTimeAlive(cursor)
+            for server in expiredActiveServersAlive:
                 serverDto = ServerDto(*server)
-                serverDto.ball_status = BallStatus.INACTIVE
+                serverDto.ball_status = str(BallStatus.INACTIVE)
                 serverDto.ball_value = 0
                 serverDto.current_thrower = None
                 serverDto.throw_type = None
                 serverDto.time_active = None
+                serverDto.throw_type_check = 0
                 channel = self.bot.get_channel(serverDto.channel_id)
                 await channel.send("Ball is No Longer Active")
                 ServerRepository.updateServer(serverDto, cursor)
+
+            # For Dead
+            expiredActiveServersDead = ServerRepository.getAllServersWithExpiredActiveTimeDead(cursor)
+            for server in expiredActiveServersDead:
+                serverDto = ServerDto(*server)
+                serverDto.throw_type_check = 1
+                channel = self.bot.get_channel(serverDto.channel_id)
+                await channel.send("Ball can now be retrieved!")
+                ServerRepository.updateServer(serverDto, cursor)
+
 
     @commands.hybrid_command(name="throw", with_app_command=True)
     async def throw(self, ctx: commands.Context, points, throw_type):
@@ -53,13 +68,13 @@ class FiveHundred(commands.Cog):
             guild_id = ctx.author.guild.id
             channel_id = ctx.channel.id
             player_id = ctx.author.id
-            ball_status = 'INACTIVE'
+            ball_status = str(BallStatus.INACTIVE)
             current_game = ServerRepository.getServerInfo(guild_id, cursor)
 
             if not current_game:
                 ServerRepository.insertServer(
-                    ServerDto(guild_id, channel_id, ball_status, points, throw_type, datetime.now(), player_id), cursor)
-                current_game = ServerDto(guild_id, channel_id, ball_status, points, throw_type, datetime.now(), player_id)
+                    ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, datetime.now(), player_id), cursor)
+                current_game = ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, datetime.now(), player_id)
 
             # validate input
             try:
@@ -80,7 +95,8 @@ class FiveHundred(commands.Cog):
             # update game
             ServerRepository.updateServer(current_game, cursor)
 
-            throw_type_message = f"You have {time_active / 60.0} minutes to catch it!" if throw_type == 'ALIVE' else ''
+            throw_type_message = f"You have {time_active / 60.0} minutes to catch it!" if throw_type == 'ALIVE' else \
+                f'You have to wait {time_active} seconds before you catch it!'
             await ctx.send(f'{ctx.author.nick} threw the ball for {points} points {throw_type}! {throw_type_message}')
 
     @commands.hybrid_command(name="catch", with_app_command=True)
@@ -107,6 +123,19 @@ class FiveHundred(commands.Cog):
                 await ctx.send(str(error))
                 return
 
+            print(parser.parse(current_game.time_active))
+            print(datetime.utcnow())
+            if current_game.throw_type == "DEAD" and parser.parse(current_game.time_active) > datetime.utcnow():
+                current_game.ball_status = str(BallStatus.INACTIVE)
+                current_game.ball_value = 0
+                current_game.current_thrower = None
+                current_game.throw_type = None
+                current_game.time_active = None
+                current_game.throw_type_check = 0
+                await ctx.send("You tried to catch a dead ball before it dropped! Ball can no longer be caught")
+                ServerRepository.updateServer(current_game, cursor)
+                return
+
             # get players
             players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id, cursor)
             players = {}
@@ -122,10 +151,11 @@ class FiveHundred(commands.Cog):
 
             await ctx.send(f'{ ctx.author.nick } captured the ball at { current_game.ball_value } points!')
 
-            current_game.ball_status = BallStatus.INACTIVE
+            current_game.ball_status = str(BallStatus.INACTIVE)
             current_game.current_thrower = None
             current_game.ball_value = 0
             current_game.time_active = None
+            current_game.throw_type_check = 0
 
             PlayerRepository.updatePlayer(players[current_player_id], cursor)
             ServerRepository.updateServer(current_game, cursor)
@@ -137,12 +167,16 @@ class FiveHundred(commands.Cog):
     @commands.hybrid_command(name="leaderboard", with_app_command=True)
     async def leaderboard(self, ctx):
         """show current standings"""
+
+        conn = sqlite3.connect(path + "/500.db")
+        cursor = conn.cursor()
+
         leaderboard = '----- LEADERBOARD -----\n'
 
         # get server
         guild_id = ctx.author.guild.id
 
-        players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id)
+        players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id, cursor)
         players = []
         for player in players_tuple:
             cur_player = PlayerDto(*player)
