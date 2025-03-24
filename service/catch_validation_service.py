@@ -1,5 +1,5 @@
 from constants import BallStatus
-from datetime import datetime
+
 
 class CatchValidationService:
 
@@ -18,8 +18,5 @@ class CatchValidationService:
         if current_thrower == current_user.id and current_user.nick != 'Jon':
             raise Exception("You\'re the active thrower!")
 
-    @staticmethod
-    def checkDeadBallRetrievalPossible(throw_type: str, time_active):
-        pass
 
 

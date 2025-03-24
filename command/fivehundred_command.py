@@ -1,10 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from dateutil import parser
 from discord.ext import commands, tasks
 import sqlite3
 from repository import ServerRepository, PlayerRepository
 from dto import PlayerDto, ServerDto
-from constants import THROW_TYPE, BallStatus
+from constants import BallStatus
 from service import CatchValidationService, ThrowService
 import os
 

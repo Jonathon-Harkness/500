@@ -59,5 +59,5 @@ class ThrowService:
                 f'You have to wait {time_active} seconds before you catch it!'
 
             if mystery_box:
-                return f"{ctx.author.nick} threw a mystery box {throw_type}! {throw_type_message}"
+                return f"{ctx.author.nick} threw a MYSTERY BOX {throw_type} 😈! {throw_type_message}"
             return f'{ctx.author.nick} threw the ball for {points} points {throw_type}! {throw_type_message}'
