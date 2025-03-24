@@ -5,7 +5,7 @@ import sqlite3
 from repository import ServerRepository, PlayerRepository
 from dto import PlayerDto, ServerDto
 from constants import THROW_TYPE, BallStatus
-from service import CatchValidationService, ThrowValidationService
+from service import CatchValidationService, ThrowService
 import os
 
 path = os.path.dirname(os.path.realpath("500 V3"))
@@ -50,53 +50,14 @@ class FiveHundred(commands.Cog):
                 ServerRepository.updateServer(serverDto, cursor)
 
     @commands.hybrid_command(name="throw", with_app_command=True)
-    async def throw(self, ctx: commands.Context, points, throw_type):
-        """throws the ball (usage: /throw <-2000 - 500> <ALIVE, DEAD>)"""
+    async def throw(self, ctx: commands.Context, points, throw_type, mystery_box=False):
+        """throws the ball. For standard throws (usage: /throw <-500 - 500> <ALIVE, DEAD> <TRUE / FALSE>)"""
 
-        with sqlite3.connect(path + "/500.db") as conn:
-            cursor = conn.cursor()
-            throw_type = throw_type.upper()
-            if throw_type not in THROW_TYPE:
-                await ctx.send(f'{throw_type} is not a valid Throw Type')
-                return
-
-            # keep the ball alive for 300 seconds or 20 seconds if dead
-            time_active = 300 if throw_type == 'ALIVE' else 20
-
-            # get server
-            guild_id = ctx.author.guild.id
-            channel_id = ctx.channel.id
-            player_id = ctx.author.id
-            ball_status = str(BallStatus.INACTIVE)
-            current_game = ServerRepository.getServerInfo(guild_id, cursor)
-
-            if not current_game:
-                ServerRepository.insertServer(
-                    ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, datetime.now(), player_id), cursor)
-                current_game = ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, datetime.now(), player_id)
-
-            # validate input
-            try:
-                ThrowValidationService.checkBallActive(current_game.ball_status)
-                ThrowValidationService.checkActiveThrower(current_game.current_thrower, ctx.author.id)
-                ThrowValidationService.checkValidPointInput(points)
-            except Exception as error:
-                await ctx.send(str(error))
-                return
-
-            current_game.guild_id = guild_id
-            current_game.ball_value = int(points)
-            current_game.ball_status = 'ACTIVE'
-            current_game.current_thrower = player_id
-            current_game.throw_type = throw_type
-            current_game.time_active = datetime.utcnow() + timedelta(seconds=time_active)
-
-            # update game
-            ServerRepository.updateServer(current_game, cursor)
-
-            throw_type_message = f"You have {time_active / 60.0} minutes to catch it!" if throw_type == 'ALIVE' else \
-                f'You have to wait {time_active} seconds before you catch it!'
-            await ctx.send(f'{ctx.author.nick} threw the ball for {points} points {throw_type}! {throw_type_message}')
+        if mystery_box:
+            await ctx.send("You threw a mystery box! Let's see what happens 😈", ephemeral=True)
+            await ctx.channel.send(ThrowService.processThrow(ctx, points, throw_type, mystery_box))
+        else:
+            await ctx.send(ThrowService.processThrow(ctx, points, throw_type, mystery_box))
 
     @commands.hybrid_command(name="catch", with_app_command=True)
     async def catch(self, ctx):
