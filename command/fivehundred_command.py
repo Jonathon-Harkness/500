@@ -80,9 +80,9 @@ class FiveHundred(commands.Cog):
         async with self.server_semaphores[(guild_id, channel_id)]:
             if mystery_box:
                 await ctx.send("You threw a mystery box! Let's see what happens 😈", ephemeral=True)
-                await ctx.channel.send(ThrowService.processSpecialThrow(ctx, special_effect, points, throw_type, mystery_box))
+                await ctx.channel.send(ThrowService.processSpecialThrow(ctx, special_effect, throw_type, points, mystery_box))
             else:
-                await ctx.send(ThrowService.processStandardThrow(ctx, special_effect, points, throw_type, mystery_box))
+                await ctx.send(ThrowService.processSpecialThrow(ctx, special_effect, throw_type, points, mystery_box))
 
     @commands.hybrid_command(name="catch", with_app_command=True)
     async def catch(self, ctx):

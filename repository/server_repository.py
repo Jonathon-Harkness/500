@@ -33,24 +33,25 @@ class ServerRepository:
     @staticmethod
     def insertServer(server: ServerDto, cursor):
         cursor.execute(
-            "INSERT INTO SERVER (GUILD_ID, CHANNEL_ID, BALL_STATUS, BALL_VALUE, THROW_TYPE, TIME_ACTIVE, CURRENT_THROWER)"
-            "VALUES (?, ?, ?, ?, ?, ?, ?)", (server.guild_id,
-                                             server.channel_id,
-                                             server.ball_status,
-                                             server.ball_value,
-                                             server.throw_type,
-                                             server.time_active,
-                                             server.current_thrower))
+            "INSERT INTO SERVER (GUILD_ID, CHANNEL_ID, BALL_STATUS, BALL_VALUE, THROW_TYPE, TIME_ACTIVE, CURRENT_THROWER, SPECIAL_EFFECT)"
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (server.guild_id,
+                                                server.channel_id,
+                                                server.ball_status,
+                                                server.ball_value,
+                                                server.throw_type,
+                                                server.time_active,
+                                                server.current_thrower,
+                                                server.special_effect))
 
     @staticmethod
     def updateServer(server: ServerDto, cursor):
         cursor.execute(f"UPDATE SERVER "
-                       f"SET BALL_STATUS=?, BALL_VALUE=?, THROW_TYPE=?, THROW_TYPE_CHECK=?, TIME_ACTIVE=?, CURRENT_THROWER=? "
+                       f"SET BALL_STATUS=?, BALL_VALUE=?, THROW_TYPE=?, THROW_TYPE_CHECK=?, TIME_ACTIVE=?, CURRENT_THROWER=?, SPECIAL_EFFECT=? "
                        f"WHERE GUILD_ID=?", (server.ball_status,
                                              server.ball_value,
                                              server.throw_type,
                                              server.throw_type_check,
                                              server.time_active,
                                              server.current_thrower,
+                                             server.special_effect,
                                              server.guild_id))
-
