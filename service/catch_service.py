@@ -1,6 +1,5 @@
 import sqlite3
 import os
-import asyncio
 from repository import ServerRepository, PlayerRepository
 from dto import PlayerDto
 from .catch_validation_service import CatchValidationService
@@ -75,5 +74,3 @@ class CatchService:
             if players[current_player_id].points >= 500:
                 PlayerRepository.resetAllPlayerPointsFromServer(guild_id, cursor)
                 await ctx.send(f'🎉 {ctx.author.nick} has won 500! 🎉')
-
-            await asyncio.sleep(5)
