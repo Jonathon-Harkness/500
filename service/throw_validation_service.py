@@ -1,4 +1,5 @@
-from constants import BallStatus, THROW_MIN, THROW_MAX
+from constants import BallStatus, THROW_MIN, THROW_MAX, SPECIAL_THROWS, SpecialThrows
+from repository import SpecialThrowRepository
 from util import is_integer
 
 
@@ -18,3 +19,13 @@ class ThrowValidationService:
     def checkValidPointInput(points):
         if not points or not is_integer(points) or int(points) < THROW_MIN or int(points) > THROW_MAX:
             raise Exception(f"{points} must be an integer between -500 and 500")
+
+    @staticmethod
+    def checkValidSpecialThrow(special_effect: str):
+        if special_effect not in SPECIAL_THROWS:
+            # TODO: pull list from list of special throws instead of hard code
+            raise Exception(f"You must select a special throw from this list: \n CHERRY_BOMB")
+
+    @staticmethod
+    def checkIfSpecialThrowRequiresPoints(special_effect: str, points: int):
+        pass

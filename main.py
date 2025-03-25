@@ -31,6 +31,14 @@ c.execute("CREATE TABLE IF NOT EXISTS PLAYER "
           "USERNAME TEXT, "
           "NICKNAME TEXT, "
           "PRIMARY KEY (GUILD_ID, PLAYER_ID, CHANNEL_ID))")
+c.execute("CREATE TABLE IF NOT EXISTS SPECIAL_THROW "
+          "(SPECIAL_THROW TEXT PRIMARY KEY, "
+          "SPECIAL_THROW_DESCRIPTION TEXT, "
+          "POINTS_REQUIRED INTEGER DEFAULT 0)")
+c.execute("INSERT OR IGNORE INTO SPECIAL_THROW (SPECIAL_THROW, SPECIAL_THROW_DESCRIPTION)"
+          "VALUES (?, ?)",
+          ("CHERRY_BOMB", "player who catches will have their point total set to zero"))
+
 conn.commit()
 
 

@@ -55,9 +55,19 @@ class FiveHundred(commands.Cog):
 
         if mystery_box:
             await ctx.send("You threw a mystery box! Let's see what happens 😈", ephemeral=True)
-            await ctx.channel.send(ThrowService.processThrow(ctx, points, throw_type, mystery_box))
+            await ctx.channel.send(ThrowService.processStandardThrow(ctx, points, throw_type, mystery_box))
         else:
-            await ctx.send(ThrowService.processThrow(ctx, points, throw_type, mystery_box))
+            await ctx.send(ThrowService.processStandardThrow(ctx, points, throw_type, mystery_box))
+
+    @commands.hybrid_command(name="throw_special", with_app_command=True)
+    async def throw_special(self, ctx: commands.Context, special_effect, throw_type, points=None, mystery_box=False):
+        """throws the ball. For special throws"""
+
+        if mystery_box:
+            await ctx.send("You threw a mystery box! Let's see what happens 😈", ephemeral=True)
+            await ctx.channel.send(ThrowService.processSpecialThrow(ctx, special_effect, throw_type, points, mystery_box))
+        else:
+            await ctx.send(ThrowService.processSpecialThrow(ctx, special_effect, throw_type, points, mystery_box))
 
     @commands.hybrid_command(name="catch", with_app_command=True)
     async def catch(self, ctx):
