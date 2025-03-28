@@ -26,11 +26,20 @@ class PlayerRepository:
     @staticmethod
     def updatePlayer(player: PlayerDto, cursor):
         cursor.execute(f"UPDATE PLAYER "
-                       f"SET POINTS='{player.points}', NICKNAME='{player.nickname}', STATUS_EFFECT='{player.status_effect}' "
-                       f"WHERE GUILD_ID='{player.guild_id}' AND PLAYER_ID='{player.player_id}'")
+                       f"SET POINTS=?, NICKNAME=?, STATUS_EFFECT=? "
+                       f"WHERE GUILD_ID=? AND PLAYER_ID=?",
+                       (player.points, player.nickname, player.status_effect, player.guild_id, player.player_id))
 
     @staticmethod
-    def resetAllPlayerPointsFromServer(guild_id, cursor):
+    def updatePlayerStatusToNull(guild_id, channel_id, cursor):
+        cursor.execute(f"UPDATE PLAYER "
+                       f"SET STATUS_EFFECT=NULL "
+                       f"WHERE GUILD_ID='{guild_id}' "
+                       f"AND CHANNEL_ID='{channel_id}' ")
+
+    @staticmethod
+    def resetAllPlayerPointsFromServer(guild_id, channel_id, cursor):
         cursor.execute(f"UPDATE PLAYER "
                        f"SET POINTS={0} "
-                       f"WHERE GUILD_ID='{guild_id}'")
+                       f"WHERE GUILD_ID='{guild_id}' "
+                       f"AND CHANNEL_ID='{channel_id}' ")

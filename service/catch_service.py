@@ -38,8 +38,6 @@ class CatchService:
                 await ctx.send(str(error))
                 return
 
-            print(parser.parse(current_game.time_active))
-            print(datetime.utcnow())
             if current_game.throw_type == "DEAD" and parser.parse(current_game.time_active) > datetime.utcnow():
                 current_game.ball_status = BallStatus.INACTIVE.value
                 current_game.ball_value = 0
@@ -81,9 +79,13 @@ class CatchService:
                         await ctx.send(f'{ ctx.author.nick } attempted to capture the ball, but was distracted by {status_dict["STINKY_GLUE"][i]["nickname"]}\'s stink!')
                         return
 
+            if players[current_player_id].status_effect == "STICKY_GLUE":
+                await ctx.send(f'{ ctx.author.nick } attempted to capture the ball but couldn\'t move due to the sticky glue!')
+                return
+
             if not special_effect_dto:
                 await ctx.send(f'{ ctx.author.nick } captured the ball at { current_game.ball_value } points!')
-                current_game.special_effect = None
+                players[current_player_id].status_effect = None
             else:
                 if special_effect_dto.name == "CHERRY_BOMB":
                     players[current_player_id].points = 0
@@ -97,12 +99,14 @@ class CatchService:
             current_game.ball_value = 0
             current_game.time_active = None
             current_game.throw_type_check = 0
+            current_game.special_effect = None
 
             # update nickname in case they've changed it since the last play
             players[current_player_id].nickname = ctx.author.nick
+            PlayerRepository.updatePlayerStatusToNull(guild_id, channel_id, cursor)
             PlayerRepository.updatePlayer(players[current_player_id], cursor)
             ServerRepository.updateServer(current_game, cursor)
 
             if players[current_player_id].points >= 500:
-                PlayerRepository.resetAllPlayerPointsFromServer(guild_id, cursor)
+                PlayerRepository.resetAllPlayerPointsFromServer(guild_id, channel_id, cursor)
                 await ctx.send(f'🎉 {ctx.author.nick} has won 500! 🎉')
