@@ -93,6 +93,9 @@ class CatchService:
                 elif special_effect_dto.name == "STINKY_GLUE":
                     players[current_player_id].status_effect = "STINKY_GLUE"
                     await ctx.send(f'{ ctx.author.nick } captured the ball with effect { current_game.special_effect } for {current_game.ball_value} points! They\'re crazy stinky and will be until the end of the next catch.')
+                elif special_effect_dto.name == "STICKY_GLUE":
+                    players[current_player_id].status_effect = "STICKY_GLUE"
+                    await ctx.send(f'{ ctx.author.nick } captured the ball with effect { current_game.special_effect } for {current_game.ball_value} points! They\'re crazy sticky and won\'t be able to catch next round!')
 
             current_game.ball_status = BallStatus.INACTIVE.value
             current_game.current_thrower = None

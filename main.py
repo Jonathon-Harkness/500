@@ -42,6 +42,9 @@ c.execute("INSERT OR IGNORE INTO SPECIAL_THROW (SPECIAL_THROW, SPECIAL_THROW_DES
 c.execute("INSERT OR IGNORE INTO SPECIAL_THROW (SPECIAL_THROW, SPECIAL_THROW_DESCRIPTION, POINTS_REQUIRED)"
           "VALUES (?, ?, ?)",
           ("STINKY_GLUE", "player will be crazy smelly. This might distract other players", 1))
+c.execute("INSERT OR IGNORE INTO SPECIAL_THROW (SPECIAL_THROW, SPECIAL_THROW_DESCRIPTION, POINTS_REQUIRED)"
+          "VALUES (?, ?, ?)",
+          ("STICKY_GLUE", "player will be sticky. They won't be able to catch the ball next round", 1))
 conn.commit()
 
 
