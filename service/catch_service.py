@@ -1,11 +1,13 @@
 import sqlite3
 import os
+import random
 from repository import ServerRepository, PlayerRepository, SpecialThrowRepository
 from dto import PlayerDto, SpecialEffectDto
 from .catch_validation_service import CatchValidationService
 from dateutil import parser
 from datetime import datetime
 from constants import BallStatus
+from collections import defaultdict
 
 
 path = os.path.dirname(os.path.realpath("500 V3"))
@@ -52,9 +54,11 @@ class CatchService:
             # get players
             players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id, cursor)
             players = {}
+            status_dict = defaultdict(list)
             for player in players_tuple:
                 p = PlayerDto(*player)
                 players[p.player_id] = p
+                status_dict[p.status_effect].append({"nickname": p.nickname, "status_effect": p.status_effect})
 
             # get special effect (if necessary)
             special_effect_dto = None
@@ -70,12 +74,23 @@ class CatchService:
             else:
                 players[current_player_id].points += current_game.ball_value
 
+            if "STINKY_GLUE" in status_dict:
+                for i in range(len(status_dict["STINKY_GLUE"])):
+                    rand = random.randint(1, 4)
+                    if rand == 1:
+                        await ctx.send(f'{ ctx.author.nick } attempted to capture the ball, but was distracted by {status_dict["STINKY_GLUE"][i]["nickname"]}\'s stink!')
+                        return
+
             if not special_effect_dto:
                 await ctx.send(f'{ ctx.author.nick } captured the ball at { current_game.ball_value } points!')
+                current_game.special_effect = None
             else:
                 if special_effect_dto.name == "CHERRY_BOMB":
                     players[current_player_id].points = 0
                     await ctx.send(f'{ ctx.author.nick } captured the ball with effect { current_game.special_effect }! They lose all their points! 🙀')
+                elif special_effect_dto.name == "STINKY_GLUE":
+                    players[current_player_id].status_effect = "STINKY_GLUE"
+                    await ctx.send(f'{ ctx.author.nick } captured the ball with effect { current_game.special_effect } for {current_game.ball_value} points! They\'re crazy stinky and will be until the end of the next catch.')
 
             current_game.ball_status = BallStatus.INACTIVE.value
             current_game.current_thrower = None

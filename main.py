@@ -39,9 +39,9 @@ c.execute("CREATE TABLE IF NOT EXISTS SPECIAL_THROW "
 c.execute("INSERT OR IGNORE INTO SPECIAL_THROW (SPECIAL_THROW, SPECIAL_THROW_DESCRIPTION)"
           "VALUES (?, ?)",
           ("CHERRY_BOMB", "player who catches will have their point total set to zero"))
-c.execute("INSERT OR IGNORE INTO SPECIAL_THROW (SPECIAL_THROW, SPECIAL_THROW_DESCRIPTION)"
-          "VALUES (?, ?)",
-          ("STINKY_GLUE", "player will be crazy smelly. This might distract other players"))
+c.execute("INSERT OR IGNORE INTO SPECIAL_THROW (SPECIAL_THROW, SPECIAL_THROW_DESCRIPTION, POINTS_REQUIRED)"
+          "VALUES (?, ?, ?)",
+          ("STINKY_GLUE", "player will be crazy smelly. This might distract other players", 1))
 conn.commit()
 
 

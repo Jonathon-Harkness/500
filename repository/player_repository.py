@@ -26,7 +26,7 @@ class PlayerRepository:
     @staticmethod
     def updatePlayer(player: PlayerDto, cursor):
         cursor.execute(f"UPDATE PLAYER "
-                       f"SET POINTS='{player.points}', NICKNAME='{player.nickname}', STATUS_EFFECT=NULL "
+                       f"SET POINTS='{player.points}', NICKNAME='{player.nickname}', STATUS_EFFECT='{player.status_effect}' "
                        f"WHERE GUILD_ID='{player.guild_id}' AND PLAYER_ID='{player.player_id}'")
 
     @staticmethod
