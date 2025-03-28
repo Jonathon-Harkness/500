@@ -1,4 +1,4 @@
-from constants import BallStatus, THROW_MIN, THROW_MAX, SPECIAL_THROWS, SpecialThrows
+from constants import BallStatus, THROW_MIN, THROW_MAX
 from dto import SpecialEffectDto
 from util import is_integer
 

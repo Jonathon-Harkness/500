@@ -83,6 +83,8 @@ class CatchService:
             current_game.time_active = None
             current_game.throw_type_check = 0
 
+            # update nickname in case they've changed it since the last play
+            players[current_player_id].nickname = ctx.author.nick
             PlayerRepository.updatePlayer(players[current_player_id], cursor)
             ServerRepository.updateServer(current_game, cursor)
 
