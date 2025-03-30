@@ -1,12 +1,10 @@
-from datetime import datetime
-from dateutil import parser
 from discord.ext import commands, tasks
 import asyncio
 import sqlite3
 from repository import ServerRepository, PlayerRepository
 from dto import PlayerDto, ServerDto
 from constants import BallStatus
-from service import CatchValidationService, ThrowService, CatchService
+from service import ThrowService, CatchService
 import os
 
 path = os.path.dirname(os.path.realpath("500 V3"))
@@ -96,6 +94,7 @@ class FiveHundred(commands.Cog):
         async with self.server_semaphores[(guild_id, channel_id)]:
             await CatchService.processCatch(ctx)
 
+    # TODO embed the leaderboard
     @commands.hybrid_command(name="leaderboard", with_app_command=True)
     async def leaderboard(self, ctx):
         """show current standings"""
