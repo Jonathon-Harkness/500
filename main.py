@@ -7,7 +7,8 @@ from cog import FiveHundred, Help
 intents = discord.Intents.default()
 intents.message_content = True
 
-bot = commands.Bot(command_prefix='$', intents=intents, help_command=None)
+activity = discord.Activity(type=discord.ActivityType.custom, name="/help", state="🏈 Throwing on /help")
+bot = commands.Bot(command_prefix='$', intents=intents, help_command=None, activity=activity)
 scripts.run()
 
 
