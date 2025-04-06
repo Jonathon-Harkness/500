@@ -32,10 +32,10 @@ class ThrowService:
 
         if not current_game:
             ServerRepository.insertServer(
-                ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, datetime.now(), player_id),
+                ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, None, None),
                 cursor)
-            current_game = ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, datetime.now(),
-                                     player_id)
+            current_game = ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, None,
+                                     None)
 
         # validate input
         try:
@@ -84,10 +84,10 @@ class ThrowService:
 
         if not current_game:
             ServerRepository.insertServer(
-                ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, datetime.now(), player_id, special_effect),
+                ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, None, None, special_effect),
                 cursor)
-            current_game = ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, datetime.now(),
-                                     player_id, special_effect)
+            current_game = ServerDto(guild_id, channel_id, ball_status, points, throw_type, 0, None,
+                                     None, special_effect)
 
         # get special throw
         special_effect_entity = SpecialThrowRepository.getSpecialThrow(cursor, special_effect)
