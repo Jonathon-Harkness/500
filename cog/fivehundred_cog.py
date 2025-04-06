@@ -1,10 +1,10 @@
 from discord.ext import commands, tasks
 import asyncio
-import sqlite3
 from repository import ServerRepository, PlayerRepository
 from dto import PlayerDto, ServerDto
 from constants import BallStatus
 from service import ThrowService, CatchService
+from db import db, cursor
 import os
 
 path = os.path.dirname(os.path.realpath("500 V3"))
@@ -21,34 +21,32 @@ class FiveHundred(commands.Cog):
     def cog_unload(self):
         self.updateServersWithExpiredActiveTimeAlive.cancel()
 
-    @tasks.loop(seconds=5.0)
+    @tasks.loop(seconds=1.0)
     async def updateServersWithExpiredActiveTimeAlive(self):
-        with sqlite3.connect(path + "/500.db") as conn:
+        # For Alive
+        expiredActiveServersAlive = ServerRepository.getAllServersWithExpiredActiveTimeAlive(cursor)
+        for server in expiredActiveServersAlive:
+            serverDto = ServerDto(*server)
+            serverDto.ball_status = BallStatus.INACTIVE.value
+            serverDto.ball_value = 0
+            serverDto.current_thrower = None
+            serverDto.throw_type = None
+            serverDto.time_active = None
+            serverDto.throw_type_check = 0
+            channel = self.bot.get_channel(int(serverDto.channel_id))
+            await channel.send("Ball is No Longer Active")
+            ServerRepository.updateServer(serverDto, cursor)
+            db.commit()
 
-            cursor = conn.cursor()
-
-            # For Alive
-            expiredActiveServersAlive = ServerRepository.getAllServersWithExpiredActiveTimeAlive(cursor)
-            for server in expiredActiveServersAlive:
-                serverDto = ServerDto(*server)
-                serverDto.ball_status = str(BallStatus.INACTIVE)
-                serverDto.ball_value = 0
-                serverDto.current_thrower = None
-                serverDto.throw_type = None
-                serverDto.time_active = None
-                serverDto.throw_type_check = 0
-                channel = self.bot.get_channel(serverDto.channel_id)
-                await channel.send("Ball is No Longer Active")
-                ServerRepository.updateServer(serverDto, cursor)
-
-            # For Dead
-            expiredActiveServersDead = ServerRepository.getAllServersWithExpiredActiveTimeDead(cursor)
-            for server in expiredActiveServersDead:
-                serverDto = ServerDto(*server)
-                serverDto.throw_type_check = 1
-                channel = self.bot.get_channel(serverDto.channel_id)
-                await channel.send("Ball can now be retrieved!")
-                ServerRepository.updateServer(serverDto, cursor)
+        # For Dead
+        expiredActiveServersDead = ServerRepository.getAllServersWithExpiredActiveTimeDead(cursor)
+        for server in expiredActiveServersDead:
+            serverDto = ServerDto(*server)
+            serverDto.throw_type_check = 1
+            channel = self.bot.get_channel(int(serverDto.channel_id))
+            await channel.send("Ball can now be retrieved!")
+            ServerRepository.updateServer(serverDto, cursor)
+            db.commit()
 
     @commands.hybrid_command(name="throw", with_app_command=True)
     async def throw(self, ctx: commands.Context, points, throw_type, mystery_box=False):
@@ -99,15 +97,13 @@ class FiveHundred(commands.Cog):
     async def leaderboard(self, ctx):
         """show current standings"""
 
-        conn = sqlite3.connect(path + "/500.db")
-        cursor = conn.cursor()
-
         leaderboard = '----- LEADERBOARD -----\n'
 
         # get server
-        guild_id = ctx.author.guild.id
+        guild_id = str(ctx.author.guild.id)
+        channel_id = str(ctx.channel.id)
 
-        players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id, cursor)
+        players_tuple = PlayerRepository.getAllPlayersFromServer(guild_id, channel_id, cursor)
         players = []
         for player in players_tuple:
             cur_player = PlayerDto(*player)

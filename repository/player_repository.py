@@ -12,22 +12,25 @@ class PlayerRepository:
         pass
 
     @staticmethod
-    def getAllPlayersFromServer(guild_id, cursor):
-        query = cursor.execute(f"SELECT * FROM PLAYER WHERE GUILD_ID={guild_id}")
-        players_tuple = query.fetchall()
+    def getAllPlayersFromServer(guild_id, channel_id, cursor):
+        cursor.execute("SELECT * FROM PLAYER "
+                       "WHERE GUILD_ID=%s "
+                       "AND CHANNEL_ID=%s ",
+                       (guild_id, channel_id))
+        players_tuple = cursor.fetchall()
         return players_tuple
 
     @staticmethod
     def insertPlayer(guild_id, channel_id, current_player_id, username, nickname, cursor, points=0, status_effect=None):
         cursor.execute("INSERT INTO PLAYER (GUILD_ID, CHANNEL_ID, PLAYER_ID, POINTS, STATUS_EFFECT, USERNAME, NICKNAME)"
-                       "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       "VALUES (%s, %s, %s, %s, %s, %s, %s)",
                        (guild_id, channel_id, current_player_id, points, status_effect, username, nickname))
 
     @staticmethod
     def updatePlayer(player: PlayerDto, cursor):
         cursor.execute(f"UPDATE PLAYER "
-                       f"SET POINTS=?, NICKNAME=?, STATUS_EFFECT=? "
-                       f"WHERE GUILD_ID=? AND PLAYER_ID=?",
+                       f"SET POINTS=%s, NICKNAME=%s, STATUS_EFFECT=%s "
+                       f"WHERE GUILD_ID=%s AND PLAYER_ID=%s",
                        (player.points, player.nickname, player.status_effect, player.guild_id, player.player_id))
 
     @staticmethod

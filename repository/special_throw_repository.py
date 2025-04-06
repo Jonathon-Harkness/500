@@ -1,16 +1,15 @@
 
-
 class SpecialThrowRepository:
 
     @staticmethod
     def getSpecialThrow(cursor, throw_type):
-        query = cursor.execute("SELECT * FROM SPECIAL_THROW "
-                               "WHERE SPECIAL_THROW=?", (throw_type,))
-        result = query.fetchone()
+        cursor.execute("SELECT * FROM SPECIAL_THROW "
+                           "WHERE SPECIAL_THROW=%s", (throw_type,))
+        result = cursor.fetchone()
         return result
 
     @staticmethod
     def getAllSpecialThrows(cursor):
-        query = cursor.execute("SELECT * FROM SPECIAL_THROW ")
-        result = query.fetchall()
+        cursor.execute("SELECT * FROM SPECIAL_THROW ")
+        result = cursor.fetchall()
         return result
